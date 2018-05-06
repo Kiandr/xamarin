@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+    <title>Exercise 2: Code a cancellable Finite-Length Task</title>
+    <link rel="stylesheet" type="text/css" href="./res/styles/normalize.css">
+    <link rel="stylesheet" type="text/css" href="./res/styles/prettify.css" />
+    <link rel="stylesheet" type="text/css" href="./res/styles/styles.css">
+</head>
+
+<body>
+    <!-- Use the same title as the StartHere -->
+    <header>Intro to Backgrounding: Running Finite-Length Tasks</header>
+
+   	<section id="main">
+
+		<h1 id="page-title"></h1>
+		<h2>Duration</h2>
+		<p>15 minutes</p>
+
+		<h2>Goals</h2>
+
+		<p>
+			The goal of this lab will be to cancel an operation that is executed as a Finite-Length Task, in case the available background time expires.
+			The application we use to demonstrate this will calculate decimals of Pi and looks like this:
+		</p>
+
+		<img src="res/images/CalcPi.png" height="400" />
+
+		<p>
+			This application will begin calculating decimals of Pi when you press the <strong>Start Calculating</strong> button. It will then continue to run when you background the application because the calculation is wrapped in a Finite-Length Task - just as you created in the first exercise.
+		</p>
+		<p>
+			Since there are an infinite number of digits in Pi, the application will continue to execute in the background until the maximum available background time has been reached and iOS terminates the application.
+		</p>
+		<p>
+			Your goal is to fix this behavior by adding <em>cancellation support</em> to the logic using a <code>CancellationToken</code>. 
+		</p>
+<p>
+<a href="#" onclick="toggleBlock(this, 'cancellationToken', 'What is a cancellation token?', 'Hide'); return false;" class="uiitem">What is a cancellation token?</a>
+<div class="wsblock" id="cancellationToken" style="display:none;">
+<!-- Each item is in a div "wsitem" -->
+<div class="wsitem">
+    <!-- Give it a title and description -->
+   <b>What is a cancellation token?</b>
+   <p>
+	Two .NET types are used to support cancellation of an ongoing operation (primarily a <code>System.Threading.Tasks.Task</code>:
+	<ul>
+		<li>
+			<code>CancellationTokenSource</code>: this class allows to <strong>initiate</strong> a cancellation request. It has a <code>Token</code> property which returns a <code>CancellationToken</code>.
+		</li>
+		<li>
+			<code>CancellationToken</code>: allows to <strong>observe</strong> cancellation. The token is passed to all methods that are involved in the cancellable operation. The methods then regularly have to check if a cancellation request	was issued. This can be done by either inspecting <code>CancellationToken.IsCancellationRequested</code> or simply by calling	<code>CancellationToken.ThrowIfCancellationRequested</code> which will throw an <code>OperationCancelledException</code> that the framework catches and re-throws when the result of the <code>Task</code> is consumed.
+		</li>
+	</ul>
+   </p>
+</div>
+</div>
+</p>
+		<p>
+		You will introduce two new behaviors into the application with this support:
+			<ol class="indent-medium">
+				<li>
+					Allow the user to stop the ongoing calculation by pressing the button once more.
+				</li>
+				<li>
+					Prevent the application from being terminated if it runs out of background time.
+				</li>
+			</ol>
+		</p>
+
+		<h2>Required assets</h2>
+		<p>
+			The provided <strong>Part 02 Resources</strong> folder contains a sub-folder named <strong>Lab.Start</strong> with a solution you can should as a starting point. There is also a <strong>Lab.Completed</strong> folder with the completed code if you want to compare your solution.
+       
+		</p>
+
+		<div class="hintblock">
+			<strong>Attention:</strong> As with the prior exercise, this exercise will not work correctly on the iOS 8 simulator. You will either need a physical device, or need to use the iOS 7.1 simulator. Please refer to the first exercise for instructions on installing the older simulator software.
+		</div>
+
+
+		<h2>Exercise Overview</h2>
+		<p>
+			Use the following high-level steps to complete the exercise. There are step-by-step directions below that which you can refer to if you need a hint or some additional guidance. 
+			<ol>
+				<li>
+					To allow cancellation of a <code>System.Threading.Tasks.Task</code>, you can use a <code>CancellationTokenSource</code> into the main view controller.
+				</li>
+				
+				<li>
+					Inside <code>HandleCalculatePi</code> method, a <code>Task</code> is started that runs the calculation independently of the UI thread. To ensure that the calculation continues when the application is backgrounded, it is wrapped into a Finite-Length Task using the same technique you used in the first exercise.
+				</li>
+
+				<li>
+					Both, the <code>Task</code> and the call to <code>PiHelper.CalcPi()</code> accept a <code>CancellationToken</code> as parameters which you can get from the <code>CancellationTokenSource</code>.
+				</li>
+
+				<li>
+					If new decimals have been calculated, the callback <code>UpdateUi()</code> will be triggered. In there, add a check if cancellation of the operation has been requested.
+				</li>
+
+				<li>
+					With the checks in place you will need to add code to actually cancel the task. This can happen if the user hits the &quot;Stop calculating&quot; button <strong>or</strong> if the app is backgrounded and runs out of background time.
+				</li>
+			</ol>
+		</p>
+
+		<div class="hintblock">
+			<strong>Tip:</strong> If you are doing this exercise live in a session, make sure to make good use of the instructor, they are online to answer any questions you have!
+		</div>
+
+		<!-- Steps -->
+		<h1>Steps</h1>
+		<p>
+			Below are the step-by-step instructions to implement the exercise.
+		</p>
+
+
+		<h2>Add a CancellationTokenSource</h2>
+		<ol>
+			<li>
+				Open the <b>CancellableTaskViewController.cs</b> source file.
+			</li>
+
+			<li>
+				Add a new private <code>CancellationTokenSource</code> field into the class and assign it to a new object.
+			</li>
+		</ol>
+
+<p>
+<a href="#" onclick="toggleBlock(this, 'step_10', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+<div class="indent-medium" id="step_10" style="display: none;">
+<pre class="prettyprint">
+partial class CancellableTaskViewController : UIViewController
+{
+   ...
+   <span class="highlight">CancellationTokenSource cts = new CancellationTokenSource ();</span>
+   ...
+}
+</pre>
+</div>
+</p>
+
+		<h2>Pass the token around</h2>
+		<p>
+			The <code>CancellationTokenSource</code> is responsible for creating the <code>CancellationToken</code> which we will use to cancel a specific operation - in this case our Pi calculation.
+		</p>
+		<ol>
+			<li>
+				Use the <code>Token</code> property of the <code>CancellationTokenSource</code> to retrieve the <code>CancellationToken</code>.
+			</li>
+			<li>
+				Pass the <code>CancellationToken</code> to the <code>PiHelper.CalcPi</code>method - there is a placeholder being passed in currently. PiHelper is already coded to regularly check if cancellation was requested and stop the calculation. 
+			</li>
+
+			<li>
+				You should also pass the token into the <code>Task.Run</code> call which creates the task. This is an optimization: if the token is canceled <em>before</em> the task is started, then the runtime will not schedule the <code>Task</code> and it will be reported as canceled.
+			</li>
+		</ol>
+<p>
+<a href="#" onclick="toggleBlock(this, 'step_20', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+
+<div class="indent-medium" id="step_20" style="display: none;">
+<pre class="prettyprint">
+try {
+   await Task.Run (() => 
+      PiHelper.CalcPi (pieceOfPi => this.UpdateUi(pieceOfPi), <span class="highlight">this.cts.Token</span>), 
+       <span class="highlight">this.cts.Token</span>);
+}
+catch (OperationCanceledException) {
+   Console.WriteLine("Calculation canceled.");
+   this.IsCalculating = false;
+}
+</pre>
+</div>
+</p>
+
+		<h2>Check if cancellation was requested</h2>
+		<p>
+			You might have noticed that we have a <code>try/catch</code> wrapper around the <code>Task.Run</code> call. This is used to catch an <code>OperationCancelledException</code>. This is the exception reported to our code when a task is canceled.
+		</p>
+		<p>
+			Each time <code>PiHelper.Calc()</code> has calculated new digits, it will trigger a callback to update the UI - this was the first parameter we passed into the method (<code>UpdateUi</code>). Since this method is called periodically by the background thread, we can use it to cancel the operation when cancellation is requested.
+		</p>
+		<p>
+			We can do this in two different ways.
+			<ol class="indent-medium">
+				<li>
+					Calling <code>token.ThrowIfCancellationRequested</code> will throw an exception if the token has been signaled and the operation is supposed to be canceled.
+				</li>
+				<li>
+					Alternatively, you can throw a <code>OperationCancelledException</code> - this is actually what the method does under the covers. This is a special exception that is caught by the Task Parallel Framework. In response, it will mark the task as canceled and re-throw the exception when the task result is consumed (e.g. <code>await</code> or <code>Task.Result</code>).
+				</li>
+			</ol>
+		</p>
+
+		<p>
+		Perform the following steps.
+		</p>
+
+		<ol>
+			<li>
+				Locate the <code>UpdateUi</code> method in the view controller.
+			</li>
+			<li>
+				Use the <code>CancellationToken</code> from your cancellation token source and call the <code>ThrowIfCancellationRequested</code> method at the top of the <code>UpdateUi</code> method. This will check the token and throw an exception if it needs to be canceled.
+			</li>
+		</ol>
+<p>
+<a href="#" onclick="toggleBlock(this, 'step_30', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+<div class="indent-medium" id="step_30" style="display: none;">
+<pre class="prettyprint">
+void UpdateUi(string pieceOfPi)
+{
+   <span class="highlight">this.cts.Token.ThrowIfCancellationRequested ();</span>
+   ...
+}
+</pre>
+</div>
+</p>
+
+		<h2>User-initiated cancellation</h2>
+		<p>
+			You will need to cancel the task if the user presses the button once more or if the background time is about to expire.
+		</p>
+
+		<ol>
+			<li>
+				Start by calling <code>Cancel</code> on the <code>CancellationTokenSource</code> when the "Stop Calculating" button is pressed. The handler for this is the <code>HandleCalculatePi()</code> method.
+			</li>
+			
+			<li>
+				Because the token could be canceled, we need to <em>reset</em> it each time we start the Pi calculator. Add a call to re-create the <code>TaskCancellationSource</code> into the <code>HandleCalculatePi</code> method when you are starting a new calculation.
+			</li>
+
+			<li>
+				Run the application and try out your new logic to cancel the task by pressing the button.
+			</li>
+		</ol>
+
+<p>
+<a href="#" onclick="toggleBlock(this, 'step_40', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+<div class="indent-medium" id="step_40" style="display: none;">
+<pre class="prettyprint">
+async partial void HandleCalculatePi (UIButton sender)
+{
+  if(this.IsCalculating)
+  {
+    this.IsCalculating = false;
+    btnCalculate.SetTitle ("Start calculating", UIControlState.Normal);
+    <span class="highlight">this.cts.Cancel();</span>
+
+    return;
+  }
+
+  this.IsCalculating = true;
+  btnCalculate.SetTitle ("Stop calculating", UIControlState.Normal);
+  this.txtPi.Text = string.Empty;
+  <span class="highlight">this.cts = new CancellationTokenSource();</span>
+  ...
+}
+</pre>
+</div>
+</p>
+		<h2>System-initiated cancellation</h2>
+		<p>
+			The second situation that will lead to cancellation is when the available background time expires. This will invoke an <em>expiration handler</em> which is passed into the iOS <code>UIApplication.BeginBackgroundTask</code> method.
+		</p>
+
+		<ol>
+			<li>
+				Locate the <code>HandleBackgroundTimeExpires</code> method - this is the callback passed to the <code>UIApplication.BeginBackgroundTask</code> method. It will be called when iOS has expired the background operation.
+			</li>
+
+			<li>
+				Add a call to cancel the task through the <code>CancellationTokenSource</code>. This should end our operation, and as a result, end the iOS background task.
+			</li>
+
+			<li>
+				If you have time, run the application and let it timeout. It should cancel automatically and no longer terminate the application.
+			</li>
+		</ol>
+
+<p>
+<a href="#" onclick="toggleBlock(this, 'step_50', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+
+<div class="indent-medium" id="step_50" style="display: none;">
+<pre class="prettyprint">
+void HandleBackgroundTimeExpires()
+{
+   <span class="highlight">this.cts.Cancel ();</span>
+}
+</pre>
+</div>
+</p>
+
+		<h1>Summary</h1>
+		<p>
+			In this exercise you have wrapped an important operation into a Finite-Length Task and added cancellation support.
+		</p>
+		<div class="align-right">
+			<a href="../Start%20Here.html">Go Back</a>
+		</div>
+	</section>
+
+    <script src="./res/js/jquery.min.js"></script>
+    <script src="./res/js/prettify.js"></script>
+    <script src="./res/js/script.js"></script>
+
+    <footer>Copyright (C) 2016 Xamarin</footer>
+</body>
+</html>

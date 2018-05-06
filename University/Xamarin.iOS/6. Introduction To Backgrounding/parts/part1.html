@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+    <title>Exercise 1: Integrate a Finite-Length Task with the application lifecycle</title>
+    <link rel="stylesheet" type="text/css" href="./res/styles/normalize.css">
+    <link rel="stylesheet" type="text/css" href="./res/styles/prettify.css" />
+    <link rel="stylesheet" type="text/css" href="./res/styles/styles.css">
+</head>
+
+<body>
+    <!-- Use the same title as the StartHere -->
+    <header>Intro to Backgrounding: Running Finite-Length Tasks</header>
+
+   	<section id="main">
+
+		<h1 id="page-title"></h1>
+		<h2>Duration</h2>
+		<p>15 minutes</p>
+
+		<h2>Goals</h2>
+
+		<p>
+			Apps often have to save state information when leaving the foreground. In this exercise you will learn how to request enough time from the operating system to complete such an operation.
+		</p>
+
+		<p>
+			<img src="res/images/finite_length_tasks.png" width="320" />
+		</p>
+
+      <div class="hintblock">
+         <strong>Attention:</strong> This exercise will not work correctly on the iOS Simulator with iOS 8.0 or 8.1! A bug in the latest Simulator prevents apps from being suspended. You will need to run this exercise on a physical device or on iOS Simulator 7.1. 
+      </div>
+
+<p>
+<a href="#" onclick="toggleBlock(this, 'installiOS7', 'How do I install the iOS7 simulator?', 'Hide'); return false;" class="uiitem">How do I install the iOS7 simulator?</a>
+<div class="wsblock" id="installiOS7" style="display:none;">
+<!-- Each item is in a div "wsitem" -->
+<div class="wsitem">
+    <!-- Give it a title and description -->
+   <b>How do I install the iOS7 simulator?</b>
+   <p>
+      <ol>
+         <li>
+            Open Xcode on your Mac. The easiest way to do this is to use Spotlight search. Press <i>CMD+SPACE</i> to open the search and type &quot;xcode&quot;. The first match should be the Xcode app.
+         </li>
+
+         <img src="./res/images/spotlight_xcode.png" width="640" />
+
+         <li>
+            In Xcode, open preferences (<i>Xcode -&gt; Preferences)</i> and navigate to the tab &quot;Downloads&quot;. In there you will see iOS7 Simulator as an available download. Start the download and wait for the installation to complete. This tends to take a while.
+         </li>
+
+         <img src="./res/images/downlaod_ios7_simulator.png" width="640" />
+
+         <li>
+            Still in Xcode, open the &quot;Devices&quot; menu (<i>Window -&gt; Devices</i>). This will show you a list of all currently connected physical devices and available Simulators. In the lower left corner, locate the &quot;+&quot; button. If you click it, you will get a screen similar to the one below where you can create a new Simulator. Set the device type to &quot;iPhone 5S&quot; and the iOS version to &quot;iOS 7.1&quot; and press the &quot;Create&quot; button. This will generate an iPhone 5S image running on iOS7. Close the device manager and quit Xcode.
+         </li>
+         <img src="./res/images/create_ios7_device.png" width="640" />
+
+         <li>
+            If Xamarin Studio (or Visual Studio) is still running, quit it now and restart it. This will refresh the list of available devices.
+         </li>
+
+         <li>
+            Open an iOS project that has SDK7 as a valid deployment target (you can pick any of the exercises of this class) and select the iOS7 Simulator from the devices dropdown and run the app.
+         </li>
+         <img src="./res/images/select_ios7_device.png" width="500" />
+      </ol>
+   </p>
+</div>
+</div>
+</p>
+
+		<h2>Required assets</h2>
+		<p>
+			The provided <strong>Part 01 Resources</strong> folder contains a subfolder named <strong>Lab.Start</strong> with a solution you should use as a starting point. There is also a <strong>Lab.Completed</strong> folder with the completed code if you want to compare your solution.
+      </p>
+       
+		</p>
+
+		<!-- Give them a challenge here, high-level steps of what we want them to do
+             so they can use this instead of the step-by-step (baby steps) included below -->
+		<h2>Exercise Overview</h2>
+		<p>
+			You can find a starter solution in the <strong>Lab.Start</strong> folder under <strong>Part 01 Resources</strong>. 
+		    It overrides all lifecycle methods and logs their calls to the console and also to the app's only view so you can track to order of the individual calls.
+            In the application delegate you find a method <code>SaveUserChoices()</code> that simulates saving the app's current state.&nbsp; 
+	
+		</p>
+
+		<ol>
+			<li>Call <code>SaveUserChoices()</code> when the application transitions into background state.
+            </li>
+			<li>To prevent termination of the app because of the long running saving process, run the method in 
+                a separate <code>Task</code> and await it.
+            </li>
+			<li>iOS will suspend the <code>Task</code>. To avoid this, begin a Finite-Length Task and end it if the
+                the saving process is finished or the available background has expired.
+			</li>
+			<li>Run the app and press the home button (you can simulate the home button press by using the iOS Simulator menu
+                &quot;Hardware -&gt; Home&quot; or by pressing &quot;CMD+SHIFT+H&quot;) to move the app into background state.
+                You should see that the output to the console continues and eventually completes.
+
+			</li>
+		</ol>
+
+		<div class="hintblock">
+			<strong>Tip:</strong> If you are doing this exercise live in a session, make sure to make good use of the instructor, they are online to answer any questions you have!
+     
+		</div>
+
+		<!-- Steps -->
+		<h1>Steps</h1>
+		<p>
+			Below are the step-by-step instructions to implement the exercise.
+       
+		</p>
+
+
+		<h2>Start a finite-length task</h2>
+		<p>
+			Open <code>AppDelegate.cs</code> and locate the <code>SaveUserChoices()</code> method. It simulates saving
+            data by sleeping for 20 seconds. After each second it outputs something to the console. 
+	   
+		</p>
+		<ol>
+			<li>
+				<code>DidEnterBackground()</code> is the method that will be called if the app moves into the background state. To execute our saving method asynchronously and to begin a Finite-Length Task, add the following code:
+            <ul class="indent-none">
+               <li>
+                  Call <code>UIApplication.BeginBackgroundTask</code>, pass <code>null</code> for the completion callback (we'll fix this later), and store the returned identifier in the <code>taskId</code> field.
+               </li>
+
+               <li>
+                  Use <code>Task.Run</code> to create a new asynchronous task and call <code>SaveUserChoices</code>.
+               </li>
+
+               <li>
+                  Use the <code>async / await</code> keywords to properly wait until the task is completed (rememner this does not <em>block</em> the thread, but instead creates a continuation which executes the remainder of the code <em>after</em> the task is finished).
+               </li>
+
+               <li>
+                  Call <code>UIApplication.EndBackgroundTask</code>, passing the task identifier. Wrap this call in an <code>if</code> condition that tests to make sure the <code>taskId</code> field has a valid value (!= -1) and reset it to (-1) when you have ended the iOS task.
+               </li>
+            </ul>
+         </li>
+
+<p class="indent-none">
+<a href="#" onclick="toggleCode(this, 'step_10'); return false;" class="uiitem">Show code</a>
+<div class="indent-none" id="step_10" style="display: none;">
+<pre class="prettyprint">
+public async override void DidEnterBackground (UIApplication app)
+{
+  Logger.Log ("DidEnterBackground() - entered background");
+
+  // Begin Finite-Length Task.
+  this.taskId = app.BeginBackgroundTask (null);
+
+  // Start saving the user choices.
+  await Task.Run (() => this.SaveUserChoices ());
+
+  // End Finite-Length Task, finished.
+  if(this.taskId != -1)
+  {
+    UIApplication.SharedApplication.EndBackgroundTask (this.taskId);
+    this.taskId = -1;
+  }
+}
+</pre>
+</div></p>
+
+			<li>
+            If you return to the application while the <code>SaveUserChoices()</code> method is still running you can end the Finite-Length Task. To do this, override <code>WillEnterForeground()</code> and call <code>UIApplication.EndBackgroundTask()</code>. Make sure to test the <code>taskId</code> value before calling <code>EndBackgroundTask</code>!
+         </li>
+               
+<p class="indent-none">
+<a href="#" onclick="toggleBlock(this, 'step_20', 'Show code', 'Hide'); return false;" class="uiitem">Show code</a>
+<div class="indent-none" id="step_20" style="display: none;">
+<pre class="prettyprint">
+public override void WillEnterForeground (UIApplication app)
+{
+  Logger.Log ("WillEnterForeground() - coming from background into foreground");
+  // End task, no longer needed.
+  if (this.taskId >= 0)
+  {
+    app.EndBackgroundTask (this.taskId);
+    this.taskId = -1;
+  }
+}
+</pre>
+</div>
+</p>
+		</ol>
+
+		<h1>Summary</h1>
+		<p>
+			To prevent threads from being suspended, you must begin a Finite-Length Task. This allows you to continue an ongoing operation even if the app gets backgrounded. In this exercise, you have used the <code>BeginBackgroundTask</code> and <code>EndBackgroundTask</code> methods to enable threads to continue execution for a short period of time after your application has been backgrounded.
+		</p>
+
+		<div class="align-right">
+			<a href="../Start%20Here.html">Go Back</a>
+		</div>
+	</section>
+
+    <script src="./res/js/jquery.min.js"></script>
+    <script src="./res/js/prettify.js"></script>
+    <script src="./res/js/script.js"></script>
+
+    <footer>Copyright (C) 2016 Xamarin</footer>
+</body>
+</html>
