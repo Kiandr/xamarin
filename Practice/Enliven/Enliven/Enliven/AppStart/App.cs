@@ -7,7 +7,7 @@ namespace Enliven
     {
         public App()
         {
-            MainPage = new EnlivenMainController().GetEnlivenMainPage();
+            MainPage = new EnlivenMainController().GetEnlivenParentPage();
 
         }
     }

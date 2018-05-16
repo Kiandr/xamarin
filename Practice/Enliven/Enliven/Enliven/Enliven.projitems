@@ -10,7 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppStart\App.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\BaseController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\EnlivenAppController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\EnlivenMainController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\EnlivenSplashController.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Resources\Resources.resx">
