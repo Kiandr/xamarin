@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Reflection;
 using Xamarin.Forms;
 
 namespace Enliven.Controllers
@@ -6,8 +6,10 @@ namespace Enliven.Controllers
 	class EnlivenMainController
 	{
 		private Page EnlivenMainPage { get; set; }
+	    private Label TapHereLabel { get; set; }
+	    private int TapCounter { get; set; }
 
-		public Page GetEnlivenMainPage()
+	    public Page GetEnlivenMainPage()
 		{
 			return EnlivenMainPage;
 			;
@@ -18,15 +20,16 @@ namespace Enliven.Controllers
 	        EnlivenMainPage = enlivenMainPage;
 	    }
         public EnlivenMainController()
-		{
+        {
 
-			//   EnlivenMainPage = new ContentPage() { Content = new Label() { Text = "Hello Ke" } };
-			var enlivenLogo = new Image
-			{
-				Source = ImageSource.FromResource("Enliven.Resources.reverse_mark.png")
-			};
-
-			var layout = new StackLayout();
+            TapCounter = 0;
+            var assembly = typeof(EnlivenMainController).GetTypeInfo().Assembly;
+		    //   EnlivenMainPage = new ContentPage() { Content = new Label() { Text = "Hello Ke" } };
+		    var enlivenLogo = new Image
+		    {
+		        Source = ImageSource.FromResource("Enliven.Resources.reverse_mark.png", assembly)
+		    };
+            var layout = new StackLayout();
 			var button = new Button
 			{
 				Text = "StackLayout",
@@ -48,7 +51,7 @@ namespace Enliven.Controllers
 			};
 
 
-			var label = new Xamarin.Forms.Label()
+		    TapHereLabel = new Xamarin.Forms.Label()
 			{
 				Text = "Tap here to start",
 
@@ -65,14 +68,14 @@ namespace Enliven.Controllers
 
 
             var tapRecognizer = new TapGestureRecognizer();
+		    tapRecognizer.Tapped += TapRecognizer_Tapped;
 
 
-
-            label.GestureRecognizers.Add(tapRecognizer);
+		    TapHereLabel.GestureRecognizers.Add(tapRecognizer);
 
 			layout.Children.Add(upperGreenColor);
 			layout.Children.Add(enlivenLogo);
-			layout.Children.Add(label);
+			layout.Children.Add(TapHereLabel);
 			layout.Spacing = 0.01;
 
 
@@ -90,9 +93,15 @@ namespace Enliven.Controllers
 			EnlivenMainPage = new ContentPage() { Content = layout };
 		}
 
+        /// <summary>
+        /// Event lister page tap here 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void TapRecognizer_Tapped(object sender, System.EventArgs e)
         {
-            throw new System.NotImplementedException();
+            TapCounter++;
+            TapHereLabel.TextColor = TapCounter%2 == 0 ? Color.Aqua : Color.Chartreuse;
         }
     }
 }
