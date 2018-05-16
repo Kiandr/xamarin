@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Xamarin.Forms;
-using System.Reflection;
-using System.Runtime.Remoting.Messaging;
-using System.Reflection.Emit;
 
 namespace Enliven.Controllers
 {
@@ -18,7 +13,11 @@ namespace Enliven.Controllers
 			;
 		}
 
-		public EnlivenMainController()
+	    public EnlivenMainController(Page enlivenMainPage)
+	    {
+	        EnlivenMainPage = enlivenMainPage;
+	    }
+        public EnlivenMainController()
 		{
 
 			//   EnlivenMainPage = new ContentPage() { Content = new Label() { Text = "Hello Ke" } };
@@ -34,13 +33,13 @@ namespace Enliven.Controllers
 				VerticalOptions = LayoutOptions.Start,
 				HorizontalOptions = LayoutOptions.FillAndExpand
 			};
-			var UpperGreenColour = new BoxView
+			var upperGreenColor = new BoxView
 			{
 				Color = Color.FromRgb(61, 70, 67),
 				VerticalOptions = LayoutOptions.FillAndExpand,
 				HorizontalOptions = LayoutOptions.FillAndExpand
 			};
-			var LowerGreenColour = new BoxView
+			var lowerGreenColor = new BoxView
 			{
 				Color = Color.FromRgb(61, 70, 67),
 				VerticalOptions = LayoutOptions.FillAndExpand,
@@ -65,9 +64,13 @@ namespace Enliven.Controllers
 			};
 
 
-			//layout.Children.Add(label);
+            var tapRecognizer = new TapGestureRecognizer();
 
-			layout.Children.Add(UpperGreenColour);
+
+
+            label.GestureRecognizers.Add(tapRecognizer);
+
+			layout.Children.Add(upperGreenColor);
 			layout.Children.Add(enlivenLogo);
 			layout.Children.Add(label);
 			layout.Spacing = 0.01;
@@ -86,6 +89,11 @@ namespace Enliven.Controllers
 			//};
 			EnlivenMainPage = new ContentPage() { Content = layout };
 		}
-	}
+
+        private void TapRecognizer_Tapped(object sender, System.EventArgs e)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
 }
 
