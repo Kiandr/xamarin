@@ -2,8 +2,17 @@
 {
      public abstract class  EnlivenBaseController
      {
+        protected EnlivenBaseController()
+        {
+        }
 
-         public string CurrentView { get; set; }
+        protected EnlivenBaseController(string currentView)
+        {
+            CurrentView = currentView;
+        }
+
+        protected string CurrentView { get; set; }
+
      }
 
 

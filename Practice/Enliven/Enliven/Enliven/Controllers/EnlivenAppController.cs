@@ -4,8 +4,14 @@ using System.Text;
 
 namespace Enliven.Controllers
 {
-    class EnlivenAppController
+    internal class EnlivenAppController : EnlivenBaseController
     {
-        
+        protected EnlivenAppController()
+        {
+        }
+
+        protected EnlivenAppController(string currentView) : base(currentView)
+        {
+        }
     }
 }

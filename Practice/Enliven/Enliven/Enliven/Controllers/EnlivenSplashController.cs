@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Xamarin.Forms;
 
 namespace Enliven.Controllers
 {
     internal class EnlivenSplashController: EnlivenBaseController
     {
+        private static Page EnlivenLoginPage { get; set; }
         private Page EnlivenSplashPage { get; set; }
         private Label TapHereLabel { get; set; }
         private int TapCounter { get; set; }
@@ -23,6 +24,7 @@ namespace Enliven.Controllers
 
         private void Init()
         {
+            InitEnlivenLoginPage();
             TapCounter = 0;
             var assembly = typeof(EnlivenMainController).GetTypeInfo().Assembly;
             //   EnlivenMainPage = new ContentPage() { Content = new Label() { Text = "Hello Ke" } };
@@ -84,7 +86,7 @@ namespace Enliven.Controllers
             //{
             //	//Content = new DatePicker
             //	//{
-            //	//	MinimumDate = new DateTime(2018, 1, 1),
+            //	//	MinimumDate =  new DateTime(2018, 1, 1),
             //	//	MaximumDate = new DateTime(2018, 12, 31),
             //	//	Date = new DateTime(2018, 6, 21)
             //	//},
@@ -93,9 +95,8 @@ namespace Enliven.Controllers
             //};
             EnlivenSplashPage = new ContentPage() { Content = layout };
         }
-
         /// <summary>
-        /// Event lister page tap here 
+        /// 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -103,9 +104,166 @@ namespace Enliven.Controllers
         {
             TapCounter++;
             TapHereLabel.TextColor = TapCounter % 2 == 0 ? Color.Aqua : Color.Chartreuse;
-        }
-    
+            CurrentView = "Splash Page";
+            TapHereLabel.Text = CurrentView;
+            SwitchPageAsync();
 
+
+
+        }
+
+        private void InitEnlivenLoginPage()
+        {
+            var assembly = typeof(EnlivenMainController).GetTypeInfo().Assembly;
+            var enlivenLogo = new Image
+            {
+                 Source = ImageSource.FromResource("Enliven.Resources.reverse_mark.png", assembly)
+            };
+            var layout = new StackLayout()
+            {
+                BackgroundColor = Color.FromRgb(61,70,67),
+                VerticalOptions = LayoutOptions.CenterAndExpand,
+                Margin = 0,
+                IsClippedToBounds = true,
+                Orientation = StackOrientation.Vertical
+            };
+
+            var buttonLogin = new Button
+            {
+                Text = "Login",
+                VerticalOptions = LayoutOptions.Center,
+                HorizontalOptions = LayoutOptions.Center,
+                BackgroundColor = Color.FromRgb(61, 70, 67),
+                TextColor = Color.White,
+                BorderColor = Color.White,
+                BorderWidth = 0,
+                Margin = 0,
+                CornerRadius = 3,
+
+            };
+
+            var button = new Button
+            {
+                Text = "Back",
+                VerticalOptions = LayoutOptions.Center,
+                HorizontalOptions = LayoutOptions.Center,
+                BackgroundColor = Color.FromRgb(61, 70, 67),
+                TextColor =  Color.White,
+                BorderColor = Color.White,
+                BorderWidth = 0,
+                Margin = 0,
+                CornerRadius = 3,
+                
+            };
+            var upperGreenColor = new BoxView
+            {
+                Color = Color.FromRgb(61, 70, 67),
+                VerticalOptions = LayoutOptions.FillAndExpand,
+                HorizontalOptions = LayoutOptions.FillAndExpand
+            };
+            var lowerGreenColor = new BoxView
+            {
+                Color = Color.FromRgb(61, 70, 67),
+                VerticalOptions = LayoutOptions.FillAndExpand,
+                HorizontalOptions = LayoutOptions.FillAndExpand,
+                HeightRequest = 75,
+            };
+            var userNameEntry = new Entry() {
+                Text = "Enliven User Name",
+                HorizontalTextAlignment = TextAlignment.Center ,
+                HorizontalOptions = LayoutOptions.FillAndExpand,
+               // VerticalOptions = LayoutOptions.FillAndExpand,
+                BackgroundColor = Color.FromRgb(61, 70, 67),
+                DisableLayout = true,
+                TextColor = Color.White,
+                
+                
+
+            };
+            var userPassEntry = new Entry()
+            {
+                Text = "Enter Password",
+                HorizontalTextAlignment = TextAlignment.Center,
+                HorizontalOptions = LayoutOptions.FillAndExpand,
+                // VerticalOptions = LayoutOptions.FillAndExpand,
+                BackgroundColor = Color.FromRgb(61, 70, 67),
+                DisableLayout = true,
+                TextColor = Color.White,
+
+
+
+            };
+
+            TapHereLabel = new Xamarin.Forms.Label()
+            {
+                Text = "Login Page",
+
+                TextColor = Color.FromHex("#ffffff"),
+                FontSize = 20,
+                BackgroundColor = Color.FromHex("#3d4643"),
+                VerticalOptions = LayoutOptions.FillAndExpand,
+                HorizontalOptions = LayoutOptions.FillAndExpand,
+                HeightRequest = 75,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalTextAlignment = TextAlignment.Center
+
+            };
+
+
+            var layoutButtons = new StackLayout()
+            {
+                BackgroundColor = Color.FromRgb(61, 70, 67),
+
+                Margin = 0,
+                HorizontalOptions = LayoutOptions.CenterAndExpand,
+                Orientation = StackOrientation.Horizontal
+
+            };
+
+            layoutButtons.Children.Add(button);
+            layoutButtons.Children.Add(buttonLogin);
+
+            //var tapRecognizer = new TapGestureRecognizer();
+            //tapRecognizer.Tapped += TapRecognizer_Tapped;
+            button.Clicked += Button_Clicked;
+            buttonLogin.Clicked += ButtonLogin_ClickedAsync;
+
+            // button.GestureRecognizers.Add(tapRecognizer);
+
+            layout.Children.Add(enlivenLogo);
+            layout.Children.Add(upperGreenColor);
+            layout.Children.Add(userNameEntry);
+            layout.Children.Add(userPassEntry);
+            layout.Children.Add(layoutButtons);
+
+           // layout.Children.Add(lowerGreenColor);
+           layout.Spacing = 0.0;
+
+            EnlivenLoginPage = new ContentPage()
+            {
+                BackgroundColor =  Color.FromRgb(61,70,67),
+                Content = layout
+            };
+        }
+
+
+
+        async void Button_Clicked(object sender, EventArgs e)
+        {
+            await App.Current.MainPage.Navigation.PopModalAsync();
+        }
+
+
+        async void ButtonLogin_ClickedAsync(object sender, EventArgs e)
+        {
+            await App.Current.MainPage.Navigation.PopModalAsync();
+        }
+
+        async void SwitchPageAsync()
+        {
+          
+                await App.Current.MainPage.Navigation.PushModalAsync(EnlivenLoginPage); // = EnlivenLoginPage;
+        }
 
     }
 }
