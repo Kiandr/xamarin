@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading;
+using Enliven.Constants;
+using Enliven.Helpers;
+using Enliven.temp;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Xamarin.Forms;
 
 namespace Enliven.Controllers
@@ -250,13 +252,41 @@ namespace Enliven.Controllers
 
         async void Button_Clicked(object sender, EventArgs e)
         {
-            await App.Current.MainPage.Navigation.PopModalAsync();
+           // await App.Current.MainPage.Navigation.PopModalAsync();
+            StateBag.ADALHelper.IsFingerPrintAuthentication();
+            
         }
 
 
         async void ButtonLogin_ClickedAsync(object sender, EventArgs e)
         {
-            await App.Current.MainPage.Navigation.PopModalAsync();
+            //await App.Current.MainPage.Navigation.PopModalAsync();
+            try
+            {
+                msg("ADAL API Constants: " + APIConstants.Dump());
+                msg("RedirUri: " + StateBag.ADALHelper.GetADALRedirUrl());
+                // msg("chirp");
+                AuthenticationResult authResult = await
+                    StateBag.ADALHelper.AuthenticateAsync(
+                        APIConstants.Authority,
+                        APIConstants.GraphResourceUri,
+                        APIConstants.ClientId,
+                        StateBag.ADALHelper.GetADALRedirUrl()
+                    );
+
+                StateBag.AuthResult = authResult;
+                msg(authResult.ToDebugString());
+            }
+            catch (Exception ex)
+            {
+                string exstuff = ex.ToString();
+                if (exstuff.Contains("authentication_ui_failed"))
+                {
+                    await EnlivenLoginPage.DisplayAlert("authentication_ui_failed", "try changing your SSL/TLS Implementation from Default to Managed TLS 1.1 under Android Options > Advanced > SSL/TLS Implementation", "eeek");
+                }
+                System.Diagnostics.Debug.WriteLine("!!! " + ex.ToString());
+                msg("exception on login: " + ex.ToString());
+            }
         }
 
         async void SwitchPageAsync()
@@ -264,6 +294,11 @@ namespace Enliven.Controllers
           
                 await App.Current.MainPage.Navigation.PushModalAsync(EnlivenLoginPage); // = EnlivenLoginPage;
         }
+        private void msg(string msg, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
+        {
+            if (string.IsNullOrEmpty(msg)) return;
 
+          TapHereLabel.Text += $"{Environment.NewLine}{memberName}: {msg}";
+        }
     }
 }
