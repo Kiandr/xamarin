@@ -19,15 +19,21 @@ namespace Enliven.iOS
 			var authContext = new AuthenticationContext(authority);
 			if (authContext.TokenCache.ReadItems().Any())
 				authContext = new AuthenticationContext(authContext.TokenCache.ReadItems().First().Authority);
-			var controller = UIApplication.SharedApplication.KeyWindow.RootViewController;
-			// jhealy: maybe platformparams here is what's wrong with other one?
-			var platformParams = new PlatformParameters(controller);
+			//var controller = UIApplication.SharedApplication.KeyWindow.RootViewController;
+			//// jhealy: maybe platformparams here is what's wrong with other one?
+			//var platformParams = new PlatformParameters(controller);
+			//var window = UIApplication.SharedApplication.KeyWindow;
 
+			var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
+			while (vc.PresentedViewController != null)
+			{
+				vc = vc.PresentedViewController;
+			}
 			var authResult = await authContext.AcquireTokenAsync(
 				resource,
 				clientId,
 				new System.Uri(returnUri),
-				platformParams);
+				new PlatformParameters(vc));
 
 			return authResult;
 		}
