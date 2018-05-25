@@ -24,16 +24,15 @@ namespace Enliven.iOS
 			//var platformParams = new PlatformParameters(controller);
 			//var window = UIApplication.SharedApplication.KeyWindow;
 
-			var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
-			while (vc.PresentedViewController != null)
-			{
-				vc = vc.PresentedViewController;
-			}
+			var window = UIApplication.SharedApplication.KeyWindow;
+			var vc = window.RootViewController;
+
 			var authResult = await authContext.AcquireTokenAsync(
 				resource,
 				clientId,
 				new System.Uri(returnUri),
-				new PlatformParameters(vc));
+				new PlatformParameters(vc.ModalViewController)
+			);
 
 			return authResult;
 		}
@@ -77,6 +76,7 @@ namespace Enliven.iOS
 		}
 		public async Task<bool> IsFingerPrintAuthentication()
 		{
+
 			var ctxt = new LAContext();
 			var error = new NSError();
 			if (ctxt.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out error))

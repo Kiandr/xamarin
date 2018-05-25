@@ -284,6 +284,13 @@ namespace Enliven.Controllers
 					);
 
 				StateBag.AuthResult = authResult;
+
+				if (authResult.AccessTokenType.Contains("Bearer") == true)
+
+					await EnlivenSplashPage.DisplayAlert("Alert", authResult.TenantId.ToString(), "OK");
+				else
+					await EnlivenSplashPage.DisplayAlert("Alert", "You have NOT been autneticated", "OK");
+
 				msg(authResult.ToDebugString());
 			}
 			catch (Exception ex)
@@ -300,6 +307,9 @@ namespace Enliven.Controllers
 
 		async void SwitchPageAsync()
 		{
+			StateBag.ADALHelper.Logout(
+						APIConstants.Authority
+					);
 
 			await App.Current.MainPage.Navigation.PushModalAsync(EnlivenLoginPage); // = EnlivenLoginPage;
 		}
